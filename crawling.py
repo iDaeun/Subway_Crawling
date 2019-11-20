@@ -9,13 +9,11 @@ subway_name = '1호선'
 SubwayInfo = {}
 
 sub_sta_nm_list = []
-# 00시승차, 하차인원 (시간단위:1시간)
-four_ride_num_list = []
-four_alight_num_list = []
-five_ride_num_list = []
-five_alight_num_list = []
-six_ride_num_list = []
-six_alight_num_list = []
+# 00시승차-하차인원의 수 (시간단위:1시간)
+four_num_list = []
+five_num_list = []
+six_num_list = []
+
 
 if endnum <= 600:
     url = 'http://openapi.seoul.go.kr:8088/647047637a656b6434385274774659/xml/' \
@@ -38,24 +36,28 @@ if endnum <= 600:
     six_ride_num = soup.find_all('six_ride_num')
     six_alight_num = soup.find_all('six_alight_num')
 
-    # 3. 데이터 가공
+    # 3. 데이터 가공 (승차인원-하차인원) <- 이부분
+    # 4. 수집한 데이터 -> list에 append
     # 직전 전동차에 있던 사람의 수 + (승차인원 - 하차인원) = 해당 전동차 안에 있는 사람의 수
     # **주의 : 한 노선만 보고 계산하면 안되고, 다른 호선과 연결되어있는 역을 파악해서 직전 역이 무엇인지 알아야함!
     # **예시 : 1호선 서울역 -> 직전역은 9호선 노량진역으로 검색 가능
-    
-    # 0 ~ 총 데이터 건수
 
-    # (승차인원-하차인원) <- 이부분
+    for code in sub_sta_nm:
+        sub_sta_nm_list.append(code.text)
+
     # 직전 역의 사람수를 더하지 않았기 때문에 음수값이 나오는 경우도 있음
     # 04~05시
     for i in range(0, int(listNum.text)):
-            print(str(i) + sub_sta_nm[i].text + ":" + str(int(four_ride_num[i].text) - int(four_alight_num[i].text)))
+        four_num_list.append(int(four_ride_num[i].text) - int(four_alight_num[i].text))
+
     # 05~06시
     for i in range(0, int(listNum.text)):
-            print(str(i) + sub_sta_nm[i].text + ":" + str(int(five_ride_num[i].text) - int(five_alight_num[i].text)))
+        five_num_list.append(int(five_ride_num[i].text) - int(five_alight_num[i].text))
+
     # 06~07시
     for i in range(0, int(listNum.text)):
-            print(str(i) + sub_sta_nm[i].text + ":" + str(int(six_ride_num[i].text) - int(six_alight_num[i].text)))
+        six_num_list.append(int(six_ride_num[i].text) - int(six_alight_num[i].text))
+
     # 07~08시
     # 08~09시
     # 09~10시
@@ -78,31 +80,11 @@ if endnum <= 600:
     # 02~03시
     # 03~04시
 
-
-    # 4. 수집한 데이터 -> list에 append
-    for code in sub_sta_nm:
-        sub_sta_nm_list.append(code.text)
-    for code in four_ride_num:
-        four_ride_num_list.append(code.text)
-    for code in four_alight_num:
-        four_alight_num_list.append(code.text)
-    for code in five_ride_num:
-        five_ride_num_list.append(code.text)
-    for code in five_alight_num:
-        five_alight_num_list.append(code.text)
-    for code in six_ride_num:
-        six_ride_num_list.append(code.text)
-    for code in six_alight_num:
-        six_alight_num_list.append(code.text)
-
     # 5. 수집한 list -> SubwayInfo에 통합
     SubwayInfo['SubwayName'] = sub_sta_nm_list
-    SubwayInfo['04시-05시 승차인원'] = four_ride_num_list
-    SubwayInfo['04시-05시 하차인원'] = four_alight_num_list
-    SubwayInfo['05시-06시 승차인원'] = five_ride_num_list
-    SubwayInfo['05시-06시 하차인원'] = five_alight_num_list
-    SubwayInfo['06시-07시 승차인원'] = six_ride_num_list
-    SubwayInfo['06시-07시 하차인원'] = six_alight_num_list
+    SubwayInfo['04시-05시 승하차인원'] = four_num_list
+    SubwayInfo['05시-06시 승하차인원'] = five_num_list
+    SubwayInfo['06시-07시 승하차인원'] = six_num_list
 
     # 6. pandas dataframe 사용
     df = pd.DataFrame(SubwayInfo)
